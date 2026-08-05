@@ -2,7 +2,7 @@
 
 Resumind is a premium, browser-based resume analysis dashboard that helps job seekers evaluate resume quality, ATS readiness, achievement impact, and alignment with a target job description.
 
-The project combines a polished purple-and-blue glass interface with an interactive scoring engine. It runs locally in the browser and requires no installation or backend.
+The project combines a polished purple-and-blue glass interface with an interactive scoring engine and payment-gated Stripe subscriptions. Resume analysis runs in the browser; secure checkout and payment verification run through the included Node.js server.
 
 ## Features
 
@@ -18,7 +18,11 @@ The project combines a polished purple-and-blue glass interface with an interact
 - Local sign-up, sign-in, password reset, and session persistence
 - Configurable notification, report-saving, and motion preferences
 - Responsive desktop and mobile interface
-- Pro plan selection demonstration
+- Professional and Career Pro subscription plans
+- Multi-step Plan → Review → Payment → Confirmation journey
+- Stripe-hosted card and billing collection
+- Server-side payment verification before Pro activation
+- Checkout cancellation and failed-verification states
 
 ## How the analysis works
 
@@ -34,7 +38,7 @@ The results are combined into an overall score with separate ATS, content, impac
 
 ## Run locally
 
-No package manager or build process is required.
+Node.js 18 or newer is required for the payment-enabled version.
 
 1. Clone the repository:
 
@@ -48,13 +52,60 @@ No package manager or build process is required.
    cd Ai-Resume-Analyzer
    ```
 
-3. Open `index.html` in a modern browser.
+3. Install dependencies:
 
-On macOS, you can run:
+   ```bash
+   npm install
+   ```
+
+4. Copy the environment template:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+5. Add Stripe test credentials and recurring Price IDs to `.env`.
+
+6. Start the application:
 
 ```bash
-open index.html
+npm start
 ```
+
+7. Open [http://localhost:3000](http://localhost:3000).
+
+The interface can still be previewed by opening `index.html` directly, but checkout requires the Node.js server.
+
+## Configure Stripe payments
+
+1. Create or open a [Stripe account](https://dashboard.stripe.com/).
+2. In Stripe test mode, create two products with recurring monthly prices:
+   - Professional — `$12 USD/month`
+   - Career Pro — `$29 USD/month`
+3. Copy each `price_...` identifier into `.env`.
+4. Copy your test secret key into `.env`.
+
+```env
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PRICE_PROFESSIONAL=price_...
+STRIPE_PRICE_CAREER_PRO=price_...
+APP_URL=http://localhost:3000
+PORT=3000
+```
+
+Never commit `.env` or expose `STRIPE_SECRET_KEY` in frontend code. The repository ignores `.env` automatically.
+
+### Payment fulfillment flow
+
+1. A signed-in user chooses a paid plan.
+2. Resumind shows a separate order-review page.
+3. The server creates a Stripe Checkout Session in subscription mode.
+4. Stripe securely collects card and billing information on its hosted page.
+5. Stripe redirects the customer back with the Checkout Session ID.
+6. The Resumind server retrieves that Session directly from Stripe.
+7. Pro activates only when the Session is `complete`, its `payment_status` is `paid`, and its email matches the signed-in account.
+
+For reliable production fulfillment across browser closures and delayed payment methods, add a Stripe webhook and persist entitlements in a database.
 
 ## Using the analyzer
 
@@ -68,9 +119,9 @@ Plain-text (`.txt`) files can be analyzed directly. PDF selection is supported i
 
 ## Privacy and storage
 
-This version is local-first. Resume reports, preferences, account details, and sessions are stored in the browser using `localStorage`. Resume content is not sent to an external API.
+Resume reports, preferences, account details, sessions, and the browser's verified entitlement marker are stored using `localStorage`. Resume content is not sent to an external AI API. Stripe receives checkout information when a paid plan is purchased.
 
-> Important: The included authentication and Pro-plan flows are product demonstrations. Browser storage is not appropriate for production passwords or payment data.
+> Important: Stripe handles payment data securely, but the included account system still uses browser storage. Before public deployment, move users, password hashes, subscriptions, and entitlements into a secure database. Never use browser-local passwords for a production service.
 
 ## Production roadmap
 
@@ -80,7 +131,7 @@ To turn the demo into a production service, the next steps are:
 - Connect a database for users and report history
 - Add server-side PDF and DOCX text extraction
 - Integrate an AI model for deeper contextual feedback and rewriting
-- Add secure billing through a payment provider such as Stripe
+- Add Stripe webhooks and a customer billing portal
 - Add rate limiting, validation, encryption, and account recovery email delivery
 - Deploy the frontend and API through a production hosting platform
 
@@ -90,13 +141,17 @@ To turn the demo into a production service, the next steps are:
 - Modern CSS with glassmorphism and responsive layouts
 - Vanilla JavaScript
 - Browser FileReader and localStorage APIs
-- No framework or build dependencies
+- Node.js and Express
+- Stripe Checkout and server-side Session verification
 
 ## Project structure
 
 ```text
 Ai-Resume-Analyzer/
 ├── index.html    # Interface, styles, scoring engine, and app behavior
+├── server.js     # Web server and Stripe Checkout API
+├── package.json  # Runtime scripts and dependencies
+├── .env.example  # Required Stripe configuration template
 ├── README.md     # Project documentation
 └── .gitignore
 ```
