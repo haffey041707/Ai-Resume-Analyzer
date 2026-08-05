@@ -97,6 +97,7 @@
     .upgrade h4 { margin: 9px 0 4px; font: 700 12px Manrope; }
     .upgrade p { margin: 0 0 13px; color: var(--muted); font-size: 10px; line-height: 1.5; }
     .upgrade button { border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.08); border-radius: 8px; padding: 8px 11px; font-size: 10px; cursor: pointer; }
+    .upgrade button:hover { background: rgba(157,108,255,.2); }
 
     main { padding: 0 36px 48px; max-width: 1500px; width: 100%; margin: 0 auto; }
     .topbar { height: 80px; display: flex; align-items: center; justify-content: space-between; }
@@ -104,6 +105,8 @@
       display: flex; align-items: center; gap: 9px; color: #6f7592; background: rgba(255,255,255,.025);
       border: 1px solid rgba(255,255,255,.055); border-radius: 10px; padding: 9px 13px; width: 260px; font-size: 11px;
     }
+    .search input { width: 100%; border: 0; outline: 0; color: #d7d9e8; background: transparent; font-size: 11px; }
+    .search input::placeholder { color: #6f7592; }
     .top-actions { display: flex; align-items: center; gap: 14px; }
     .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,.035); cursor: pointer; position: relative; }
     .dot { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--purple); right: 8px; top: 7px; box-shadow: 0 0 8px var(--purple); }
@@ -152,6 +155,31 @@
     .user-menu.open { display: block; animation: fade .15s ease; }
     .user-menu button { width: 100%; text-align: left; border: 0; color: #c7c9d8; background: transparent; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 10px; }
     .user-menu button:hover { background: rgba(255,255,255,.05); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; align-items: stretch; }
+    .price-card { padding: 25px; position: relative; overflow: hidden; }
+    .price-card.featured { border-color: rgba(157,108,255,.5); transform: translateY(-6px); box-shadow: 0 26px 80px rgba(86,47,204,.28); }
+    .popular { position: absolute; right: 16px; top: 16px; color: #d7c7ff; font-size: 8px; letter-spacing: 1px; background: rgba(157,108,255,.18); padding: 5px 8px; border-radius: 20px; }
+    .plan-name { color: #bda7ff; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; }
+    .plan-price { font: 800 32px Manrope; margin: 12px 0 4px; }
+    .plan-price span { color: var(--muted); font: 500 10px DM Sans; }
+    .plan-copy { color: var(--muted); font-size: 10px; min-height: 34px; }
+    .plan-list { list-style: none; padding: 0; margin: 20px 0; display: grid; gap: 10px; color: #c6c9dc; font-size: 10px; }
+    .plan-list li::before { content: "✓"; color: var(--green); margin-right: 8px; }
+    .plan-button { width: 100%; border: 1px solid var(--border); background: rgba(255,255,255,.04); padding: 10px; border-radius: 10px; cursor: pointer; font-size: 10px; }
+    .featured .plan-button { border: 0; background: linear-gradient(110deg,#8653ff,#327df4); }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .setting-row h4 { margin: 0 0 4px; font-size: 11px; }
+    .setting-row p { margin: 0; color: var(--muted); font-size: 9px; }
+    .switch { width: 38px; height: 21px; border: 0; border-radius: 20px; background: #30344d; padding: 3px; cursor: pointer; transition: .2s; }
+    .switch::after { content:""; display:block; width:15px; height:15px; border-radius:50%; background:white; transition:.2s; }
+    .switch.on { background: linear-gradient(90deg,var(--purple),var(--blue)); }
+    .switch.on::after { transform: translateX(17px); }
+    .faq { border-bottom: 1px solid rgba(255,255,255,.06); }
+    .faq button { width: 100%; padding: 16px 0; display:flex; justify-content:space-between; border:0; color:white; background:transparent; cursor:pointer; text-align:left; font-size:11px; }
+    .faq p { display:none; margin: -3px 0 16px; color:var(--muted); font-size:10px; line-height:1.6; }
+    .faq.open p { display:block; }
+    .toast { position:fixed; right:24px; bottom:24px; z-index:50; padding:12px 16px; color:white; background:#202442; border:1px solid rgba(157,108,255,.35); border-radius:11px; box-shadow:var(--shadow); font-size:10px; transform:translateY(30px); opacity:0; pointer-events:none; transition:.3s; }
+    .toast.show { transform:translateY(0); opacity:1; }
 
     .hero { display: flex; align-items: end; justify-content: space-between; margin: 13px 0 25px; animation: rise .6s ease both; }
     .eyebrow { color: var(--purple); font-size: 10px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; }
@@ -250,7 +278,8 @@
       .sidebar { display: none; }
       main { padding: 0 18px 35px; }
       .mobile-menu { display: grid; }
-      .grid, .lower-grid, .feature-grid { grid-template-columns: 1fr; }
+      .grid, .lower-grid, .feature-grid, .pricing-grid { grid-template-columns: 1fr; }
+      .sidebar.mobile-open { display:flex; position:fixed; z-index:40; width:238px; }
       .upload-card { min-height: 295px; }
     }
     @media (max-width: 560px) {
@@ -276,20 +305,21 @@
         <a class="nav-item" href="#analysis" data-page="analysis"><span class="nav-icon">⌁</span> AI Analysis</a>
         <a class="nav-item" href="#keywords" data-page="keywords"><span class="nav-icon">⌘</span> Keywords</a>
         <a class="nav-item" href="#improvements" data-page="improvements"><span class="nav-icon">◇</span> Improvements</a>
+        <a class="nav-item" href="#reports" data-page="reports"><span class="nav-icon">▤</span> Reports</a>
       </nav>
       <div class="nav-label" style="margin-top:28px">ACCOUNT</div>
       <nav class="nav">
         <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
         <button class="nav-item" data-page="help"><span class="nav-icon">?</span> Help center</button>
       </nav>
-      <div class="upgrade"><span class="spark">✦</span><h4>Unlock deeper insights</h4><p>Get advanced ATS matching and unlimited analyses.</p><button>Explore Pro →</button></div>
+      <div class="upgrade"><span class="spark">◆</span><h4>Unlock deeper insights</h4><p>Get advanced ATS matching and unlimited analyses.</p><button id="explorePro">Explore Pro →</button></div>
     </aside>
 
     <main id="dashboard">
       <header class="topbar">
-        <button class="icon-btn mobile-menu">☰</button>
-        <div class="search">⌕ &nbsp; Search your reports...</div>
-        <div class="top-actions"><button class="icon-btn">♢<span class="dot"></span></button><button class="avatar" id="profileButton" aria-label="Open account">↗</button></div>
+        <button class="icon-btn mobile-menu" id="mobileMenu">☰</button>
+        <label class="search">⌕ <input id="reportSearch" placeholder="Search your reports..." /></label>
+        <div class="top-actions"><button class="icon-btn" id="notificationButton" aria-label="Notifications">♢<span class="dot" id="notificationDot"></span></button><button class="avatar" id="profileButton" aria-label="Open account">↗</button></div>
       </header>
 
       <div class="user-menu" id="userMenu"><button id="accountAction">Sign in or create account</button><button id="logoutButton" style="display:none">Sign out</button></div>
@@ -365,14 +395,21 @@
         <div class="feature-grid" id="improvementCards"><article class="card feature-card"><div class="feature-icon">01</div><h3>Quantify your work</h3><p>Add percentages, revenue, time saved, users reached, or team size to your strongest achievements.</p></article><article class="card feature-card"><div class="feature-icon">02</div><h3>Lead with outcomes</h3><p>Rewrite responsibility-based bullets to show the result and the value your work created.</p></article><article class="card feature-card"><div class="feature-icon">03</div><h3>Match the role</h3><p>Include relevant role terminology naturally where it accurately reflects your experience.</p></article></div>
       </div>
 
-      <div class="page" id="page-settings"><div class="page-heading"><div class="eyebrow">PREFERENCES</div><h1>Settings</h1><p class="subtitle">Personalize your resume workspace.</p></div><article class="card wide-card"><div class="card-title"><h3>Privacy & analysis</h3><span class="badge">Local-first</span></div><p class="subtitle" style="margin-top:15px">Resume text and account details are stored only in this browser demo. Connect a secure backend before using production credentials.</p></article></div>
-      <div class="page" id="page-help"><div class="page-heading"><div class="eyebrow">SUPPORT</div><h1>Help Center</h1><p class="subtitle">Everything you need to get a stronger analysis.</p></div><div class="feature-grid"><article class="card feature-card"><div class="feature-icon">?</div><h3>How scoring works</h3><p>Your score combines ATS structure, content quality, achievement impact and target-role keywords.</p></article><article class="card feature-card"><div class="feature-icon">TXT</div><h3>Supported files</h3><p>TXT files are analyzed directly. PDF text can be pasted into the analyzer for accurate review.</p></article><article class="card feature-card"><div class="feature-icon">✓</div><h3>Best results</h3><p>Include the complete job description to receive a useful and specific keyword match.</p></article></div></div>
+      <div class="page" id="page-reports"><div class="page-heading"><div class="eyebrow">HISTORY</div><h1>Analysis Reports</h1><p class="subtitle">Your completed reviews are saved in this browser.</p></div><article class="card wide-card"><div class="card-title"><h3>Recent reports</h3><span class="badge" id="reportCount">0 reports</span></div><div id="reportList" class="insight-list"><div class="insight"><div class="insight-icon info">▤</div><div class="insight-copy"><h4>No saved reports yet</h4><p>Run an analysis and it will appear here automatically.</p></div></div></div></article></div>
+
+      <div class="page" id="page-pro"><div class="page-heading"><div class="eyebrow">RESUMIND PRO</div><h1>Invest in your next opportunity.</h1><p class="subtitle">Choose the intelligence level that fits your job search. Plan selection is a local product demo; live billing requires a payment backend.</p></div><div class="pricing-grid"><article class="card price-card"><div class="plan-name">Starter</div><div class="plan-price">$0 <span>/ forever</span></div><p class="plan-copy">Essential feedback for getting started.</p><ul class="plan-list"><li>3 resume analyses</li><li>Basic ATS score</li><li>Keyword overview</li></ul><button class="plan-button" data-plan="Starter">Current plan</button></article><article class="card price-card featured"><span class="popular">MOST POPULAR</span><div class="plan-name">Professional</div><div class="plan-price">$12 <span>/ month</span></div><p class="plan-copy">Advanced tools for a focused job search.</p><ul class="plan-list"><li>Unlimited analyses</li><li>Deep ATS intelligence</li><li>Role-specific rewriting</li><li>Unlimited saved reports</li></ul><button class="plan-button" data-plan="Professional">Start Pro demo</button></article><article class="card price-card"><div class="plan-name">Career Pro</div><div class="plan-price">$29 <span>/ month</span></div><p class="plan-copy">A complete toolkit for serious career growth.</p><ul class="plan-list"><li>Everything in Professional</li><li>Cover letter generator</li><li>Interview preparation</li><li>Priority support</li></ul><button class="plan-button" data-plan="Career Pro">Start Career Pro demo</button></article></div></div>
+
+      <div class="page" id="page-notifications"><div class="page-heading"><div class="eyebrow">INBOX</div><h1>Notifications</h1><p class="subtitle">Updates from your resume workspace.</p></div><article class="card wide-card"><div class="insight-list"><div class="insight"><div class="insight-icon good">✓</div><div class="insight-copy"><h4>Your workspace is ready</h4><p>Upload a resume to receive your first personalized analysis.</p></div><div class="insight-score">Just now</div></div><div class="insight"><div class="insight-icon info">◆</div><div class="insight-copy"><h4>Pro analysis is available</h4><p>Explore deeper ATS matching and unlimited reports.</p></div><div class="insight-score">New</div></div></div></article></div>
+
+      <div class="page" id="page-settings"><div class="page-heading"><div class="eyebrow">PREFERENCES</div><h1>Settings</h1><p class="subtitle">Personalize your resume workspace.</p></div><article class="card wide-card"><div class="card-title"><h3>Privacy & analysis</h3><span class="badge">Local-first</span></div><div class="setting-row"><div><h4>Save analysis reports</h4><p>Keep completed scores in your browser history.</p></div><button class="switch on" data-setting="saveReports"></button></div><div class="setting-row"><div><h4>Motion effects</h4><p>Use premium transitions and animated score bars.</p></div><button class="switch on" data-setting="motion"></button></div><div class="setting-row"><div><h4>Analysis notifications</h4><p>Show a notification when a review is complete.</p></div><button class="switch on" data-setting="notifications"></button></div></article></div>
+      <div class="page" id="page-help"><div class="page-heading"><div class="eyebrow">SUPPORT</div><h1>Help Center</h1><p class="subtitle">Everything you need to get a stronger analysis.</p></div><article class="card wide-card"><div class="faq"><button>How does resume scoring work?<span>+</span></button><p>Your overall score combines ATS structure, content quality, measurable impact and target-job keyword alignment.</p></div><div class="faq"><button>Which files can I upload?<span>+</span></button><p>TXT files are analyzed directly. For PDF documents, paste the extracted resume text into the analyzer.</p></div><div class="faq"><button>Where is my information stored?<span>+</span></button><p>This version stores account state, preferences and reports locally in your browser. Nothing is sent to a server.</p></div><div class="faq"><button>How do I get the best match score?<span>+</span></button><p>Paste the full target job description and keep only truthful skills and experience in your resume.</p></div></article></div>
 
       <div class="auth-page" id="page-auth">
         <article class="card auth-card"><button class="text-button auth-back" id="backToApp">← Back to app</button><div class="auth-brand"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4.5h7.4L18 8.1V19.5H7z" stroke="white" stroke-width="1.8"/><path d="M14 4.8V9h3.8M10 12h5M10 15h4" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg></div><h2 id="authTitle">Welcome back</h2><p class="auth-sub" id="authSub">Sign in to access your resume workspace.</p><div class="auth-tabs" id="authTabs"><button class="auth-tab active" data-auth="signin">Sign in</button><button class="auth-tab" data-auth="signup">Create account</button></div><form class="auth-form" id="authForm"><label id="nameLabel" style="display:none">Full name<input id="authName" autocomplete="name" /></label><label>Email address<input type="email" id="authEmail" required autocomplete="email" placeholder="you@example.com" /></label><label id="passwordLabel">Password<input type="password" id="authPassword" required minlength="6" autocomplete="current-password" placeholder="At least 6 characters" /></label><label id="newPasswordLabel" style="display:none">New password<input type="password" id="newPassword" minlength="6" autocomplete="new-password" placeholder="Choose a new password" /></label><div class="auth-tools" id="forgotTools"><button class="text-button" type="button" id="forgotPassword">Forgot password?</button></div><button class="primary" type="submit" id="authSubmit">Sign in</button><div class="auth-message" id="authMessage"></div></form></article>
       </div>
     </main>
   </div>
+  <div class="toast" id="toast"></div>
 
   <div class="modal" id="modal">
     <div class="modal-panel">
@@ -399,6 +436,8 @@
       $$('[data-page]').forEach(item => item.classList.toggle('active', item.dataset.page === name));
       if (updateHash) history.replaceState(null, '', '#' + name);
       $('#userMenu').classList.remove('open');
+      $('.sidebar').classList.remove('mobile-open');
+      if (name === 'reports') renderReports();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -465,6 +504,8 @@
         actionHits >= 3 ? ['good','✦','Strong action language','Your bullet points use decisive, achievement-led verbs.','ATS ready'] : ['info','✦','Use stronger action verbs','Start bullets with Led, Built, Improved or Delivered.','Quick win']
       ];
       $('#insightList').innerHTML = findings.map(x => `<div class="insight"><div class="insight-icon ${x[0]}">${x[1]}</div><div class="insight-copy"><h4>${x[2]}</h4><p>${x[3]}</p></div><div class="insight-score">${x[4]}</div></div>`).join('');
+      saveReport({ score, ats, content, impact, keyword, title: $('#fileName').textContent.replace('✓ ','') || 'Pasted resume', date: new Date().toISOString() });
+      if (getSettings().notifications) showToast('Analysis complete — your report scored ' + score + '/100');
       modal.classList.remove('open');
       document.body.classList.remove('analyzing');
     }
@@ -472,6 +513,12 @@
     window.addEventListener('load', () => {
       animateScore(87); setMetrics([92,84,88,76]);
       updateAccount();
+      renderReports();
+      const activePlan = localStorage.getItem('resumindPlan');
+      if (activePlan) {
+        $('#explorePro').textContent = activePlan + ' active ✓';
+        $$('.plan-button').forEach(b => { if (b.dataset.plan === activePlan) b.textContent = 'Current plan ✓'; });
+      }
       const requested = location.hash.slice(1);
       if (requested && $('#page-' + requested)) showPage(requested, false);
     });
@@ -577,6 +624,72 @@
       updateAccount();
       showPage('auth');
     };
+
+    function showToast(message) {
+      const toast = $('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    function getSettings() {
+      return JSON.parse(localStorage.getItem('resumindSettings') || '{"saveReports":true,"motion":true,"notifications":true}');
+    }
+
+    function saveReport(report) {
+      if (!getSettings().saveReports) return;
+      const reports = JSON.parse(localStorage.getItem('resumindReports') || '[]');
+      reports.unshift(report);
+      localStorage.setItem('resumindReports', JSON.stringify(reports.slice(0, 25)));
+      renderReports();
+    }
+
+    function renderReports(query = '') {
+      const reports = JSON.parse(localStorage.getItem('resumindReports') || '[]');
+      const filtered = reports.filter(r => r.title.toLowerCase().includes(query.toLowerCase()));
+      $('#reportCount').textContent = reports.length + (reports.length === 1 ? ' report' : ' reports');
+      $('#reportList').innerHTML = filtered.length ? filtered.map(r => `<div class="insight"><div class="insight-icon ${r.score >= 80 ? 'good' : 'info'}">${r.score}</div><div class="insight-copy"><h4>${r.title}</h4><p>ATS ${r.ats}% · Content ${r.content}% · Impact ${r.impact}% · Keywords ${r.keyword}%</p></div><div class="insight-score">${new Date(r.date).toLocaleDateString()}</div></div>`).join('') : '<div class="insight"><div class="insight-icon info">▤</div><div class="insight-copy"><h4>No matching reports</h4><p>Run a new analysis or try another search.</p></div></div>';
+    }
+
+    $('#reportSearch').addEventListener('input', e => {
+      showPage('reports');
+      renderReports(e.target.value);
+      e.target.focus();
+    });
+    $('#notificationButton').onclick = () => { $('#notificationDot').style.display = 'none'; showPage('notifications'); };
+    $('#explorePro').onclick = () => showPage('pro');
+    $('#mobileMenu').onclick = () => $('.sidebar').classList.toggle('mobile-open');
+
+    $$('.plan-button').forEach(button => button.onclick = () => {
+      const plan = button.dataset.plan;
+      if (plan === 'Starter') { showToast('Starter is your current free plan.'); return; }
+      const session = JSON.parse(localStorage.getItem('resumindSession') || 'null');
+      if (!session) { showToast('Create an account before choosing a plan.'); setTimeout(() => showPage('auth'), 650); return; }
+      localStorage.setItem('resumindPlan', plan);
+      $$('.plan-button').forEach(b => b.textContent = b.dataset.plan === plan ? 'Current plan ✓' : (b.dataset.plan === 'Starter' ? 'Starter plan' : 'Choose ' + b.dataset.plan));
+      $('#explorePro').textContent = plan + ' active ✓';
+      showToast(plan + ' activated for this browser demo.');
+    });
+
+    $$('.switch').forEach(button => {
+      const settings = getSettings();
+      button.classList.toggle('on', settings[button.dataset.setting] !== false);
+      button.onclick = () => {
+        const latest = getSettings();
+        latest[button.dataset.setting] = !latest[button.dataset.setting];
+        localStorage.setItem('resumindSettings', JSON.stringify(latest));
+        button.classList.toggle('on', latest[button.dataset.setting]);
+        if (button.dataset.setting === 'motion') document.documentElement.style.scrollBehavior = latest.motion ? 'smooth' : 'auto';
+        showToast('Preference saved');
+      };
+    });
+
+    $$('.faq button').forEach(button => button.onclick = () => {
+      const item = button.parentElement;
+      item.classList.toggle('open');
+      button.querySelector('span').textContent = item.classList.contains('open') ? '−' : '+';
+    });
 
     const input = $('#fileInput'), drop = $('#dropZone');
     ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
