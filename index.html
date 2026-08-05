@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resumind — AI Resume Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070913;
+      --panel: rgba(17, 20, 39, .72);
+      --panel-2: rgba(23, 26, 49, .74);
+      --border: rgba(255, 255, 255, .09);
+      --text: #f5f4ff;
+      --muted: #9499b5;
+      --purple: #9d6cff;
+      --purple-2: #713cff;
+      --blue: #3b82f6;
+      --cyan: #40d4ff;
+      --green: #5ce1a1;
+      --orange: #ffaf69;
+      --shadow: 0 24px 80px rgba(0, 0, 0, .38);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "DM Sans", sans-serif;
+      background:
+        radial-gradient(circle at 75% -10%, rgba(84, 59, 231, .22), transparent 35%),
+        radial-gradient(circle at 95% 60%, rgba(29, 117, 255, .12), transparent 30%),
+        var(--bg);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.85'/%3E%3C/svg%3E");
+    }
+
+    button, textarea, input { font: inherit; }
+    button { color: inherit; }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(3px);
+      pointer-events: none;
+      opacity: .3;
+      animation: drift 11s ease-in-out infinite alternate;
+    }
+    .orb.one { width: 220px; height: 220px; right: -80px; top: 12%; background: rgba(121, 69, 255, .22); }
+    .orb.two { width: 160px; height: 160px; left: 8%; bottom: -70px; background: rgba(44, 135, 255, .17); animation-delay: -4s; }
+    @keyframes drift { to { transform: translate3d(-35px, 55px, 0) scale(1.12); } }
+
+    .app { display: grid; grid-template-columns: 238px 1fr; min-height: 100vh; position: relative; z-index: 1; }
+    .sidebar {
+      position: sticky; top: 0; height: 100vh;
+      padding: 28px 18px 24px;
+      border-right: 1px solid var(--border);
+      background: rgba(8, 10, 23, .76);
+      backdrop-filter: blur(28px);
+      display: flex; flex-direction: column;
+    }
+    .logo { display: flex; align-items: center; gap: 11px; padding: 0 10px 34px; font: 800 18px Manrope; letter-spacing: -.5px; }
+    .logo-mark {
+      width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center;
+      background: linear-gradient(145deg, #b27cff, #7144ff 55%, #3288ff);
+      box-shadow: 0 8px 24px rgba(124, 76, 255, .38);
+    }
+    .logo-mark svg { width: 19px; height: 19px; }
+    .nav-label { color: #626883; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; padding: 0 12px 9px; }
+    .nav { display: grid; gap: 6px; }
+    .nav-item {
+      border: 0; background: transparent; text-decoration: none; cursor: pointer;
+      display: flex; gap: 12px; align-items: center; padding: 11px 13px; border-radius: 11px;
+      color: #858ba7; font-size: 13px; font-weight: 600; transition: .25s ease;
+    }
+    .nav-item:hover { color: #ddd9ff; background: rgba(255,255,255,.04); transform: translateX(2px); }
+    .nav-item.active { color: white; background: linear-gradient(90deg, rgba(132, 80, 255, .23), rgba(55, 118, 255, .08)); box-shadow: inset 2px 0 var(--purple); }
+    .nav-icon { width: 19px; text-align: center; font-size: 16px; }
+    .upgrade {
+      margin-top: auto; position: relative; overflow: hidden; padding: 17px; border: 1px solid rgba(151, 109, 255, .22); border-radius: 15px;
+      background: linear-gradient(145deg, rgba(119, 74, 255, .14), rgba(25, 31, 66, .5));
+    }
+    .upgrade::after { content: ""; position: absolute; width: 90px; height: 90px; right: -35px; top: -38px; border-radius: 50%; background: var(--purple); filter: blur(35px); opacity: .25; }
+    .upgrade .spark { font-size: 18px; }
+    .upgrade h4 { margin: 9px 0 4px; font: 700 12px Manrope; }
+    .upgrade p { margin: 0 0 13px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .upgrade button { border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.08); border-radius: 8px; padding: 8px 11px; font-size: 10px; cursor: pointer; }
+
+    main { padding: 0 36px 48px; max-width: 1500px; width: 100%; margin: 0 auto; }
+    .topbar { height: 80px; display: flex; align-items: center; justify-content: space-between; }
+    .search {
+      display: flex; align-items: center; gap: 9px; color: #6f7592; background: rgba(255,255,255,.025);
+      border: 1px solid rgba(255,255,255,.055); border-radius: 10px; padding: 9px 13px; width: 260px; font-size: 11px;
+    }
+    .top-actions { display: flex; align-items: center; gap: 14px; }
+    .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,.035); cursor: pointer; position: relative; }
+    .dot { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--purple); right: 8px; top: 7px; box-shadow: 0 0 8px var(--purple); }
+    .avatar { width: 38px; height: 38px; border: 1px solid rgba(168,128,255,.35); border-radius: 12px; display: grid; place-items: center; font: 700 11px Manrope; background: linear-gradient(145deg, #8f69ff, #376fdc); cursor: pointer; transition: .2s; }
+    .avatar:hover { transform: translateY(-2px); box-shadow: 0 9px 25px rgba(107,73,240,.35); }
+    .page { display: none; animation: rise .45s ease both; }
+    .page.active { display: block; }
+    .page-heading { margin: 14px 0 25px; }
+    .page-heading h1 { margin-bottom: 5px; }
+    .feature-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+    .feature-card { padding: 23px; min-height: 175px; }
+    .feature-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; margin-bottom: 18px; background: linear-gradient(145deg,rgba(157,108,255,.2),rgba(59,130,246,.12)); color: #bca3ff; }
+    .feature-card h3 { margin: 0 0 8px; font: 700 13px Manrope; }
+    .feature-card p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.65; }
+    .wide-card { padding: 25px; margin-top: 18px; }
+    .keyword-table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 11px; }
+    .keyword-table th, .keyword-table td { text-align: left; padding: 13px 10px; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .keyword-table th { color: #6f7592; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; }
+    .match-pill { color: var(--green); background: rgba(92,225,161,.08); border-radius: 20px; padding: 4px 8px; }
+    .missing-pill { color: var(--orange); background: rgba(255,175,105,.08); border-radius: 20px; padding: 4px 8px; }
+    .auth-page { min-height: calc(100vh - 105px); display: none; place-items: center; }
+    .auth-page.active { display: grid; }
+    body.auth-mode .app { grid-template-columns: 1fr; }
+    body.auth-mode .sidebar, body.auth-mode .topbar, body.auth-mode .user-menu { display: none !important; }
+    body.auth-mode main { max-width: none; min-height: 100vh; padding: 0 20px; display: grid; place-items: center; }
+    body.auth-mode .auth-page { width: 100%; min-height: 100vh; }
+    .auth-card { width: min(430px,100%); padding: 30px; }
+    .auth-brand { width: 52px; height: 52px; display: grid; place-items: center; margin: 0 auto 16px; border-radius: 15px; background: linear-gradient(145deg,#a06aff,#327bf2); box-shadow: 0 12px 35px rgba(116,71,244,.35); }
+    .auth-brand svg { width: 26px; }
+    .auth-card h2 { text-align: center; font: 800 22px Manrope; margin: 0 0 6px; }
+    .auth-sub { text-align: center; color: var(--muted); font-size: 11px; margin-bottom: 23px; }
+    .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: rgba(255,255,255,.04); border-radius: 11px; margin-bottom: 18px; }
+    .auth-tab { border: 0; border-radius: 8px; background: transparent; padding: 9px; cursor: pointer; color: var(--muted); font-size: 11px; }
+    .auth-tab.active { color: white; background: rgba(138,91,255,.2); }
+    .auth-form { display: grid; gap: 12px; }
+    .auth-form label { color: #a9adc1; font-size: 10px; font-weight: 700; }
+    .auth-form input { width: 100%; margin-top: 6px; padding: 11px 12px; color: white; outline: none; border: 1px solid var(--border); border-radius: 10px; background: rgba(0,0,0,.18); }
+    .auth-form input:focus { border-color: var(--purple); }
+    .auth-form .primary { width: 100%; margin-top: 5px; }
+    .auth-message { min-height: 16px; text-align: center; font-size: 10px; color: var(--green); }
+    .auth-tools { display: flex; justify-content: flex-end; margin-top: -4px; }
+    .text-button { border: 0; background: transparent; color: #a98bff; font-size: 10px; cursor: pointer; padding: 2px 0; }
+    .text-button:hover { color: #ccbaff; }
+    .auth-back { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 20px; }
+    .user-menu { position: absolute; right: 36px; top: 64px; width: 190px; padding: 8px; border: 1px solid var(--border); border-radius: 12px; background: #15182d; box-shadow: var(--shadow); z-index: 15; display: none; }
+    .user-menu.open { display: block; animation: fade .15s ease; }
+    .user-menu button { width: 100%; text-align: left; border: 0; color: #c7c9d8; background: transparent; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 10px; }
+    .user-menu button:hover { background: rgba(255,255,255,.05); }
+
+    .hero { display: flex; align-items: end; justify-content: space-between; margin: 13px 0 25px; animation: rise .6s ease both; }
+    .eyebrow { color: var(--purple); font-size: 10px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; }
+    h1 { font: 700 clamp(25px, 3vw, 36px) Manrope; letter-spacing: -1.3px; margin: 7px 0 7px; }
+    .subtitle { color: var(--muted); font-size: 13px; margin: 0; }
+    .primary {
+      border: 0; border-radius: 11px; padding: 11px 17px; cursor: pointer; font-size: 12px; font-weight: 700;
+      background: linear-gradient(110deg, #8653ff, #6245f6 46%, #307df5); box-shadow: 0 10px 28px rgba(106, 72, 247, .27);
+      transition: transform .2s, box-shadow .2s; position: relative; overflow: hidden;
+    }
+    .primary:hover { transform: translateY(-2px); box-shadow: 0 15px 35px rgba(106, 72, 247, .38); }
+    .primary::after { content: ""; position: absolute; inset: 0; transform: translateX(-120%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); transition: transform .6s; }
+    .primary:hover::after { transform: translateX(120%); }
+
+    .grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 18px; }
+    .card {
+      border: 1px solid var(--border); border-radius: 18px; background: linear-gradient(145deg, rgba(21,24,45,.82), rgba(12,15,31,.76));
+      backdrop-filter: blur(22px); box-shadow: var(--shadow); animation: rise .65s ease both;
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    .overview { padding: 24px; min-height: 320px; }
+    .card-title { display: flex; align-items: center; justify-content: space-between; }
+    .card-title h3 { margin: 0; font: 700 13px Manrope; }
+    .badge { color: #a98bff; border: 1px solid rgba(160, 116, 255, .25); background: rgba(143, 91, 255, .09); padding: 5px 9px; border-radius: 20px; font-size: 9px; }
+    .score-wrap { display: grid; grid-template-columns: 190px 1fr; align-items: center; gap: 22px; padding-top: 25px; }
+    .ring { width: 162px; height: 162px; position: relative; display: grid; place-items: center; }
+    .ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: rgba(255,255,255,.055); stroke-width: 9; }
+    .ring-score { fill: none; stroke: url(#grad); stroke-width: 9; stroke-linecap: round; stroke-dasharray: 440; stroke-dashoffset: 440; filter: drop-shadow(0 0 8px rgba(130,88,255,.6)); transition: stroke-dashoffset 1.4s cubic-bezier(.2,.8,.2,1); }
+    .ring::after { content: ""; position: absolute; inset: 21px; border-radius: 50%; background: radial-gradient(circle, rgba(112,72,255,.12), transparent 65%); }
+    .score-text { position: relative; z-index: 2; text-align: center; }
+    .score-num { font: 800 38px Manrope; letter-spacing: -2px; }
+    .score-denom { color: #676d88; font-size: 12px; }
+    .score-label { color: var(--green); font-size: 10px; font-weight: 700; margin-top: 2px; }
+    .metrics { display: grid; gap: 15px; }
+    .metric-head { display: flex; justify-content: space-between; font-size: 10px; color: #a4a8bd; margin-bottom: 7px; }
+    .metric-head strong { color: #e8e7f3; }
+    .track { height: 6px; border-radius: 12px; background: rgba(255,255,255,.06); overflow: hidden; }
+    .bar { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--purple-2), var(--purple), var(--blue), var(--cyan)); background-size: 200% 100%; box-shadow: 0 0 15px rgba(109, 98, 255, .55); transition: width 1.2s cubic-bezier(.2,.8,.2,1); animation: shimmer 2.5s linear infinite; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    .upload-card { padding: 24px; animation-delay: .08s; display: flex; flex-direction: column; }
+    .drop-zone {
+      flex: 1; margin-top: 19px; border: 1px dashed rgba(148, 114, 255, .32); border-radius: 14px; min-height: 185px;
+      display: grid; place-items: center; text-align: center; padding: 20px; cursor: pointer; transition: .25s; background: rgba(109,73,255,.035);
+    }
+    .drop-zone:hover, .drop-zone.drag { border-color: var(--purple); background: rgba(109,73,255,.09); transform: translateY(-2px); }
+    .upload-icon { width: 48px; height: 48px; border-radius: 14px; margin: 0 auto 13px; display: grid; place-items: center; font-size: 20px; color: #bd9eff; background: linear-gradient(145deg, rgba(151,103,255,.2), rgba(54,116,255,.11)); border: 1px solid rgba(181,142,255,.2); }
+    .drop-zone h4 { margin: 0 0 6px; font: 700 12px Manrope; }
+    .drop-zone p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.6; }
+    #fileInput { display: none; }
+    .file-name { color: #bba3ff !important; margin-top: 8px !important; font-weight: 600; }
+
+    .lower-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 18px; margin-top: 18px; }
+    .insights { padding: 22px 24px; animation-delay: .13s; }
+    .insight-list { display: grid; gap: 10px; margin-top: 17px; }
+    .insight { display: flex; align-items: center; gap: 13px; padding: 12px; border: 1px solid rgba(255,255,255,.055); border-radius: 12px; background: rgba(255,255,255,.018); transition: .2s; }
+    .insight:hover { transform: translateX(3px); background: rgba(255,255,255,.035); }
+    .insight-icon { width: 32px; height: 32px; flex: 0 0 32px; display: grid; place-items: center; border-radius: 9px; font-size: 13px; }
+    .good { background: rgba(59, 216, 151, .1); color: var(--green); }
+    .warn { background: rgba(255, 169, 91, .1); color: var(--orange); }
+    .info { background: rgba(73, 131, 255, .1); color: #6c9fff; }
+    .insight-copy h4 { margin: 0 0 3px; font-size: 10px; }
+    .insight-copy p { margin: 0; color: var(--muted); font-size: 9px; }
+    .insight-score { margin-left: auto; color: #757b96; font-size: 9px; white-space: nowrap; }
+
+    .keywords { padding: 22px 24px; animation-delay: .18s; }
+    .keyword-summary { display: flex; align-items: center; gap: 14px; margin: 18px 0; }
+    .mini-ring { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font: 700 13px Manrope; background: conic-gradient(var(--purple) 0 78%, rgba(255,255,255,.06) 78%); position: relative; }
+    .mini-ring::before { content: ""; position: absolute; inset: 5px; background: #111427; border-radius: 50%; }
+    .mini-ring span { position: relative; }
+    .keyword-summary h4 { margin: 0 0 4px; font-size: 11px; }
+    .keyword-summary p { margin: 0; color: var(--muted); font-size: 9px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chip { font-size: 9px; padding: 6px 9px; border-radius: 20px; border: 1px solid rgba(145,102,255,.17); color: #bca8f3; background: rgba(127,84,255,.07); animation: pop .35s ease both; }
+    @keyframes pop { from { opacity: 0; transform: scale(.8); } }
+
+    .modal { position: fixed; inset: 0; z-index: 20; background: rgba(3,4,12,.72); backdrop-filter: blur(12px); display: none; place-items: center; padding: 20px; }
+    .modal.open { display: grid; animation: fade .2s ease; }
+    @keyframes fade { from { opacity: 0; } }
+    .modal-panel { width: min(620px, 100%); border: 1px solid var(--border); border-radius: 20px; padding: 25px; background: #111427; box-shadow: 0 30px 100px #000; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; }
+    .modal-head h3 { margin: 0; font: 700 17px Manrope; }
+    .close { border: 0; background: rgba(255,255,255,.06); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; }
+    .modal label { display: block; margin: 18px 0 7px; color: #a9adc1; font-size: 10px; font-weight: 700; }
+    textarea { width: 100%; height: 135px; resize: vertical; border: 1px solid var(--border); border-radius: 12px; background: rgba(0,0,0,.18); color: white; padding: 13px; outline: none; font-size: 11px; line-height: 1.5; }
+    textarea:focus { border-color: rgba(143, 98, 255, .65); box-shadow: 0 0 0 3px rgba(123,72,255,.08); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+    .secondary { border: 1px solid var(--border); background: rgba(255,255,255,.04); border-radius: 10px; padding: 10px 14px; cursor: pointer; font-size: 11px; }
+    .analyzing .logo-mark { animation: pulse .8s ease infinite alternate; }
+    @keyframes pulse { to { transform: scale(1.12) rotate(5deg); box-shadow: 0 0 34px rgba(138,89,255,.7); } }
+
+    .mobile-menu { display: none; }
+    @media (max-width: 920px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      main { padding: 0 18px 35px; }
+      .mobile-menu { display: grid; }
+      .grid, .lower-grid, .feature-grid { grid-template-columns: 1fr; }
+      .upload-card { min-height: 295px; }
+    }
+    @media (max-width: 560px) {
+      .search { display: none; }
+      .hero { align-items: flex-start; gap: 18px; }
+      .hero .primary { padding: 10px; font-size: 0; }
+      .hero .primary::before { content: "+"; font-size: 18px; }
+      .score-wrap { grid-template-columns: 1fr; justify-items: center; }
+      .metrics { width: 100%; }
+      .overview { padding: 19px; }
+      .topbar { height: 66px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb one"></div><div class="orb two"></div>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo"><div class="logo-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4.5h7.4L18 8.1V19.5H7z" stroke="white" stroke-width="1.8"/><path d="M14 4.8V9h3.8M10 12h5M10 15h4" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg></div> Resumind</div>
+      <div class="nav-label">WORKSPACE</div>
+      <nav class="nav">
+        <a class="nav-item active" href="#overview" data-page="overview"><span class="nav-icon">◫</span> Overview</a>
+        <a class="nav-item" href="#analysis" data-page="analysis"><span class="nav-icon">⌁</span> AI Analysis</a>
+        <a class="nav-item" href="#keywords" data-page="keywords"><span class="nav-icon">⌘</span> Keywords</a>
+        <a class="nav-item" href="#improvements" data-page="improvements"><span class="nav-icon">◇</span> Improvements</a>
+      </nav>
+      <div class="nav-label" style="margin-top:28px">ACCOUNT</div>
+      <nav class="nav">
+        <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
+        <button class="nav-item" data-page="help"><span class="nav-icon">?</span> Help center</button>
+      </nav>
+      <div class="upgrade"><span class="spark">✦</span><h4>Unlock deeper insights</h4><p>Get advanced ATS matching and unlimited analyses.</p><button>Explore Pro →</button></div>
+    </aside>
+
+    <main id="dashboard">
+      <header class="topbar">
+        <button class="icon-btn mobile-menu">☰</button>
+        <div class="search">⌕ &nbsp; Search your reports...</div>
+        <div class="top-actions"><button class="icon-btn">♢<span class="dot"></span></button><button class="avatar" id="profileButton" aria-label="Open account">↗</button></div>
+      </header>
+
+      <div class="user-menu" id="userMenu"><button id="accountAction">Sign in or create account</button><button id="logoutButton" style="display:none">Sign out</button></div>
+
+      <div class="page active" id="page-overview">
+
+      <section class="hero">
+        <div><div class="eyebrow">AI Resume Intelligence</div><h1>Your career, decoded.</h1><p class="subtitle">Precision feedback engineered to get your resume noticed.</p></div>
+        <button class="primary" id="openAnalyzer">▤ &nbsp; Analyze resume</button>
+      </section>
+
+      <section class="grid" id="analysis">
+        <article class="card overview">
+          <div class="card-title"><h3>Resume performance</h3><span class="badge" id="statusBadge">Strong profile</span></div>
+          <div class="score-wrap">
+            <div class="ring">
+              <svg width="162" height="162" viewBox="0 0 162 162"><defs><linearGradient id="grad"><stop offset="0%" stop-color="#a86dff"/><stop offset="55%" stop-color="#7854ff"/><stop offset="100%" stop-color="#3d91ff"/></linearGradient></defs><circle class="ring-bg" cx="81" cy="81" r="70"/><circle class="ring-score" id="ringScore" cx="81" cy="81" r="70"/></svg>
+              <div class="score-text"><div><span class="score-num" id="scoreNum">0</span><span class="score-denom">/100</span></div><div class="score-label" id="scoreLabel">Excellent</div></div>
+            </div>
+            <div class="metrics">
+              <div><div class="metric-head"><span>ATS compatibility</span><strong id="atsValue">92%</strong></div><div class="track"><div class="bar" data-width="92"></div></div></div>
+              <div><div class="metric-head"><span>Content quality</span><strong id="contentValue">84%</strong></div><div class="track"><div class="bar" data-width="84"></div></div></div>
+              <div><div class="metric-head"><span>Impact & clarity</span><strong id="impactValue">88%</strong></div><div class="track"><div class="bar" data-width="88"></div></div></div>
+              <div><div class="metric-head"><span>Keyword relevance</span><strong id="keywordValue">76%</strong></div><div class="track"><div class="bar" data-width="76"></div></div></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card upload-card">
+          <div class="card-title"><h3>Quick analysis</h3><span class="badge">AI powered</span></div>
+          <label class="drop-zone" id="dropZone" for="fileInput">
+            <div><div class="upload-icon">⇧</div><h4>Drop your resume here</h4><p>or click to browse your files<br>PDF or TXT · max 10MB</p><p class="file-name" id="fileName"></p></div>
+          </label>
+          <input id="fileInput" type="file" accept=".pdf,.txt,text/plain,application/pdf" />
+        </article>
+      </section>
+
+      <section class="lower-grid">
+        <article class="card insights" id="insights">
+          <div class="card-title"><h3>AI-powered insights</h3><span class="badge">4 findings</span></div>
+          <div class="insight-list" id="insightList">
+            <div class="insight"><div class="insight-icon good">✓</div><div class="insight-copy"><h4>Strong professional summary</h4><p>Your opening quickly communicates value and experience.</p></div><div class="insight-score">+12 points</div></div>
+            <div class="insight"><div class="insight-icon warn">↗</div><div class="insight-copy"><h4>Add more measurable results</h4><p>Use numbers to make achievements specific and credible.</p></div><div class="insight-score">High impact</div></div>
+            <div class="insight"><div class="insight-icon info">✦</div><div class="insight-copy"><h4>Optimize your skills section</h4><p>Prioritize technical skills found in the target role.</p></div><div class="insight-score">5 matches</div></div>
+          </div>
+        </article>
+
+        <article class="card keywords" id="keywords">
+          <div class="card-title"><h3>Keyword intelligence</h3><span class="badge">Live match</span></div>
+          <div class="keyword-summary"><div class="mini-ring"><span id="matchNum">78%</span></div><div><h4>Great keyword coverage</h4><p id="matchCopy">18 of 23 key terms detected</p></div></div>
+          <div class="chips" id="chips"><span class="chip">Leadership</span><span class="chip">Strategy</span><span class="chip">Analytics</span><span class="chip">Growth</span><span class="chip">Python</span><span class="chip">Agile</span><span class="chip">Communication</span></div>
+        </article>
+      </section>
+      </div>
+
+      <div class="page" id="page-analysis">
+        <div class="page-heading"><div class="eyebrow">DEEP REVIEW</div><h1>AI Analysis</h1><p class="subtitle">Run a complete resume and job-description comparison.</p></div>
+        <div class="feature-grid">
+          <article class="card feature-card"><div class="feature-icon">◎</div><h3>ATS Readiness</h3><p>Checks section structure, formatting signals, content length and machine readability.</p></article>
+          <article class="card feature-card"><div class="feature-icon">↗</div><h3>Achievement Impact</h3><p>Finds action verbs, measurable results and places where your experience can be stronger.</p></article>
+          <article class="card feature-card"><div class="feature-icon">⌘</div><h3>Role Matching</h3><p>Compares resume language with a target job description to identify important gaps.</p></article>
+        </div>
+        <article class="card wide-card"><div class="card-title"><h3>Start a new intelligent review</h3><span class="badge">About 30 seconds</span></div><p class="subtitle" style="margin:12px 0 18px">Paste your resume and optional target role. Your content stays in this browser.</p><button class="primary open-analysis">▤ &nbsp; Open analyzer</button></article>
+      </div>
+
+      <div class="page" id="page-keywords">
+        <div class="page-heading"><div class="eyebrow">ROLE ALIGNMENT</div><h1>Keyword Intelligence</h1><p class="subtitle">See what hiring systems detect—and what your resume is missing.</p></div>
+        <article class="card wide-card"><div class="card-title"><h3>Detected keyword map</h3><span class="badge">Updated live</span></div><table class="keyword-table"><thead><tr><th>Keyword</th><th>Category</th><th>Status</th><th>Priority</th></tr></thead><tbody id="keywordRows"><tr><td>Leadership</td><td>Soft skill</td><td><span class="match-pill">Matched</span></td><td>High</td></tr><tr><td>Analytics</td><td>Technical</td><td><span class="match-pill">Matched</span></td><td>High</td></tr><tr><td>Roadmap planning</td><td>Product</td><td><span class="missing-pill">Missing</span></td><td>Medium</td></tr><tr><td>Stakeholder management</td><td>Leadership</td><td><span class="missing-pill">Missing</span></td><td>High</td></tr></tbody></table></article>
+      </div>
+
+      <div class="page" id="page-improvements">
+        <div class="page-heading"><div class="eyebrow">ACTION PLAN</div><h1>Improvements</h1><p class="subtitle">A focused roadmap for making your resume more competitive.</p></div>
+        <div class="feature-grid" id="improvementCards"><article class="card feature-card"><div class="feature-icon">01</div><h3>Quantify your work</h3><p>Add percentages, revenue, time saved, users reached, or team size to your strongest achievements.</p></article><article class="card feature-card"><div class="feature-icon">02</div><h3>Lead with outcomes</h3><p>Rewrite responsibility-based bullets to show the result and the value your work created.</p></article><article class="card feature-card"><div class="feature-icon">03</div><h3>Match the role</h3><p>Include relevant role terminology naturally where it accurately reflects your experience.</p></article></div>
+      </div>
+
+      <div class="page" id="page-settings"><div class="page-heading"><div class="eyebrow">PREFERENCES</div><h1>Settings</h1><p class="subtitle">Personalize your resume workspace.</p></div><article class="card wide-card"><div class="card-title"><h3>Privacy & analysis</h3><span class="badge">Local-first</span></div><p class="subtitle" style="margin-top:15px">Resume text and account details are stored only in this browser demo. Connect a secure backend before using production credentials.</p></article></div>
+      <div class="page" id="page-help"><div class="page-heading"><div class="eyebrow">SUPPORT</div><h1>Help Center</h1><p class="subtitle">Everything you need to get a stronger analysis.</p></div><div class="feature-grid"><article class="card feature-card"><div class="feature-icon">?</div><h3>How scoring works</h3><p>Your score combines ATS structure, content quality, achievement impact and target-role keywords.</p></article><article class="card feature-card"><div class="feature-icon">TXT</div><h3>Supported files</h3><p>TXT files are analyzed directly. PDF text can be pasted into the analyzer for accurate review.</p></article><article class="card feature-card"><div class="feature-icon">✓</div><h3>Best results</h3><p>Include the complete job description to receive a useful and specific keyword match.</p></article></div></div>
+
+      <div class="auth-page" id="page-auth">
+        <article class="card auth-card"><button class="text-button auth-back" id="backToApp">← Back to app</button><div class="auth-brand"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4.5h7.4L18 8.1V19.5H7z" stroke="white" stroke-width="1.8"/><path d="M14 4.8V9h3.8M10 12h5M10 15h4" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg></div><h2 id="authTitle">Welcome back</h2><p class="auth-sub" id="authSub">Sign in to access your resume workspace.</p><div class="auth-tabs" id="authTabs"><button class="auth-tab active" data-auth="signin">Sign in</button><button class="auth-tab" data-auth="signup">Create account</button></div><form class="auth-form" id="authForm"><label id="nameLabel" style="display:none">Full name<input id="authName" autocomplete="name" /></label><label>Email address<input type="email" id="authEmail" required autocomplete="email" placeholder="you@example.com" /></label><label id="passwordLabel">Password<input type="password" id="authPassword" required minlength="6" autocomplete="current-password" placeholder="At least 6 characters" /></label><label id="newPasswordLabel" style="display:none">New password<input type="password" id="newPassword" minlength="6" autocomplete="new-password" placeholder="Choose a new password" /></label><div class="auth-tools" id="forgotTools"><button class="text-button" type="button" id="forgotPassword">Forgot password?</button></div><button class="primary" type="submit" id="authSubmit">Sign in</button><div class="auth-message" id="authMessage"></div></form></article>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-panel">
+      <div class="modal-head"><h3>Analyze your resume</h3><button class="close" id="closeModal">×</button></div>
+      <label for="resumeText">Paste resume content</label>
+      <textarea id="resumeText" placeholder="Paste your experience, skills and achievements here..."></textarea>
+      <label for="jobText">Target job description (optional)</label>
+      <textarea id="jobText" placeholder="Paste a job description to calculate keyword match..." style="height:100px"></textarea>
+      <div class="modal-actions"><button class="secondary" id="fillDemo">Use demo</button><button class="primary" id="runAnalysis">▤ &nbsp; Run AI analysis</button></div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => document.querySelectorAll(s);
+    const modal = $('#modal');
+    const stopWords = new Set('the a an and or but of to in for with on at from by as is are was were be been this that your our their it its will can'.split(' '));
+
+    function showPage(name, updateHash = true) {
+      const target = $('#page-' + name) || $('#page-overview');
+      $$('.page, .auth-page').forEach(page => page.classList.remove('active'));
+      target.classList.add('active');
+      document.body.classList.toggle('auth-mode', name === 'auth');
+      $$('[data-page]').forEach(item => item.classList.toggle('active', item.dataset.page === name));
+      if (updateHash) history.replaceState(null, '', '#' + name);
+      $('#userMenu').classList.remove('open');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    $$('[data-page]').forEach(item => item.addEventListener('click', e => {
+      e.preventDefault();
+      showPage(item.dataset.page);
+    }));
+
+    function animateScore(score) {
+      const number = $('#scoreNum');
+      const ring = $('#ringScore');
+      const start = performance.now();
+      const duration = 1100;
+      ring.style.strokeDashoffset = 440 - (440 * score / 100);
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        number.textContent = Math.round(score * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function setMetrics(values) {
+      const ids = ['ats', 'content', 'impact', 'keyword'];
+      $$('.bar').forEach((bar, i) => {
+        bar.dataset.width = values[i];
+        setTimeout(() => bar.style.width = values[i] + '%', 110 + i * 90);
+        $('#' + ids[i] + 'Value').textContent = values[i] + '%';
+      });
+    }
+
+    function words(text) { return text.toLowerCase().match(/[a-z][a-z+#.-]{2,}/g) || []; }
+
+    function analyze(resume, job = '') {
+      const rw = words(resume);
+      const unique = new Set(rw);
+      const jobWords = words(job).filter(w => !stopWords.has(w));
+      const jobUnique = [...new Set(jobWords)];
+      const matched = jobUnique.filter(w => unique.has(w));
+      const hasNumbers = /\b\d+(?:%|k|m|\+)?\b/i.test(resume);
+      const actionHits = ['led','built','created','improved','increased','managed','delivered','launched','developed'].filter(w => unique.has(w)).length;
+      const sections = ['experience','education','skills','summary','projects'].filter(w => unique.has(w)).length;
+      const lengthScore = Math.min(100, Math.round(rw.length / 3.4));
+      const ats = Math.min(98, 61 + sections * 6 + (resume.length > 700 ? 6 : 0));
+      const content = Math.min(97, 55 + Math.round(lengthScore * .22) + actionHits * 3 + (hasNumbers ? 8 : 0));
+      const impact = Math.min(96, 55 + actionHits * 5 + (hasNumbers ? 14 : 0));
+      const keyword = jobUnique.length ? Math.max(28, Math.round(matched.length / jobUnique.length * 100)) : Math.min(91, 62 + sections * 5);
+      const score = Math.round(ats * .28 + content * .27 + impact * .25 + keyword * .2);
+      animateScore(score);
+      setMetrics([ats, content, impact, keyword]);
+      $('#scoreLabel').textContent = score >= 85 ? 'Excellent' : score >= 70 ? 'Strong' : 'Needs focus';
+      $('#statusBadge').textContent = score >= 85 ? 'Top tier profile' : score >= 70 ? 'Strong profile' : 'Ready to improve';
+      const keywordPool = jobUnique.length ? matched : [...unique].filter(w => ['leadership','strategy','analytics','growth','python','agile','communication','design','marketing','sales','management','react','javascript'].includes(w));
+      const display = [...new Set(keywordPool)].slice(0, 9);
+      $('#chips').innerHTML = (display.length ? display : ['Experience','Results','Collaboration']).map((w,i) => `<span class="chip" style="animation-delay:${i*.05}s">${w[0].toUpperCase()+w.slice(1)}</span>`).join('');
+      const matchedRows = (display.length ? display : ['experience','results','collaboration']).slice(0,5).map(w => `<tr><td>${w[0].toUpperCase()+w.slice(1)}</td><td>Resume term</td><td><span class="match-pill">Matched</span></td><td>High</td></tr>`);
+      const missingRows = jobUnique.filter(w => !unique.has(w)).slice(0,4).map(w => `<tr><td>${w[0].toUpperCase()+w.slice(1)}</td><td>Job term</td><td><span class="missing-pill">Missing</span></td><td>High</td></tr>`);
+      $('#keywordRows').innerHTML = [...matchedRows, ...missingRows].join('');
+      $('#matchNum').textContent = keyword + '%';
+      $('#matchCopy').textContent = jobUnique.length ? `${matched.length} of ${jobUnique.length} key terms detected` : 'Add a job description for a precise match';
+      const findings = [
+        sections >= 3 ? ['good','✓','Clear resume structure','Core resume sections are easy for ATS tools to recognize.','+' + (sections*2) + ' points'] : ['warn','↗','Strengthen resume structure','Add clear Summary, Experience, Skills and Education headings.','High impact'],
+        hasNumbers ? ['good','✓','Measurable achievements found','Numbers make your accomplishments credible and memorable.','Strong signal'] : ['warn','↗','Add measurable results','Use percentages, revenue, time saved or team size.','High impact'],
+        actionHits >= 3 ? ['good','✦','Strong action language','Your bullet points use decisive, achievement-led verbs.','ATS ready'] : ['info','✦','Use stronger action verbs','Start bullets with Led, Built, Improved or Delivered.','Quick win']
+      ];
+      $('#insightList').innerHTML = findings.map(x => `<div class="insight"><div class="insight-icon ${x[0]}">${x[1]}</div><div class="insight-copy"><h4>${x[2]}</h4><p>${x[3]}</p></div><div class="insight-score">${x[4]}</div></div>`).join('');
+      modal.classList.remove('open');
+      document.body.classList.remove('analyzing');
+    }
+
+    window.addEventListener('load', () => {
+      animateScore(87); setMetrics([92,84,88,76]);
+      updateAccount();
+      const requested = location.hash.slice(1);
+      if (requested && $('#page-' + requested)) showPage(requested, false);
+    });
+    $('#openAnalyzer').onclick = () => modal.classList.add('open');
+    $$('.open-analysis').forEach(button => button.onclick = () => modal.classList.add('open'));
+    $('#closeModal').onclick = () => modal.classList.remove('open');
+    modal.onclick = e => { if (e.target === modal) modal.classList.remove('open'); };
+    $('#fillDemo').onclick = () => {
+      $('#resumeText').value = 'Product Manager Summary Experienced product leader with 6 years of experience. Experience Led cross-functional teams and launched 4 products. Increased user retention by 28% and delivered $1.2M annual revenue. Built analytics dashboards and managed agile product strategy. Skills Leadership, strategy, analytics, communication, Python, Agile. Education BSc Computer Science.';
+      $('#jobText').value = 'We need a product manager with leadership, agile strategy, analytics, communication, growth, roadmap planning, stakeholder management and Python experience.';
+    };
+    $('#runAnalysis').onclick = () => {
+      const resume = $('#resumeText').value.trim();
+      if (!resume) { $('#resumeText').focus(); return; }
+      document.body.classList.add('analyzing');
+      $('#runAnalysis').textContent = 'Analyzing...';
+      setTimeout(() => { analyze(resume, $('#jobText').value); $('#runAnalysis').innerHTML = '▤ &nbsp; Run AI analysis'; }, 900);
+    };
+
+    let authMode = 'signin';
+    const profileButton = $('#profileButton');
+    profileButton.onclick = () => $('#userMenu').classList.toggle('open');
+    $('#accountAction').onclick = () => showPage('auth');
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#userMenu') && !e.target.closest('#profileButton')) $('#userMenu').classList.remove('open');
+    });
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      $$('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.auth === mode));
+      const signup = mode === 'signup';
+      const forgot = mode === 'forgot';
+      $('#nameLabel').style.display = signup ? 'block' : 'none';
+      $('#passwordLabel').style.display = forgot ? 'none' : 'block';
+      $('#authPassword').required = !forgot;
+      $('#newPasswordLabel').style.display = forgot ? 'block' : 'none';
+      $('#newPassword').required = forgot;
+      $('#authTabs').style.display = forgot ? 'none' : 'grid';
+      $('#forgotTools').style.justifyContent = forgot ? 'flex-start' : 'flex-end';
+      $('#forgotPassword').textContent = forgot ? '← Back to sign in' : 'Forgot password?';
+      $('#forgotTools').style.display = signup ? 'none' : 'flex';
+      $('#authTitle').textContent = forgot ? 'Reset your password' : signup ? 'Create your account' : 'Welcome back';
+      $('#authSub').textContent = forgot ? 'Enter the email used for your browser account and choose a new password.' : signup ? 'Build a smarter resume workspace in seconds.' : 'Sign in to access your resume workspace.';
+      $('#authSubmit').textContent = forgot ? 'Reset password' : signup ? 'Create account' : 'Sign in';
+      $('#authPassword').autocomplete = signup ? 'new-password' : 'current-password';
+      $('#authMessage').textContent = '';
+      $('#authMessage').style.color = 'var(--green)';
+    }
+
+    $$('.auth-tab').forEach(tab => tab.onclick = () => setAuthMode(tab.dataset.auth));
+    $('#forgotPassword').onclick = () => setAuthMode(authMode === 'forgot' ? 'signin' : 'forgot');
+    $('#backToApp').onclick = () => showPage('overview');
+
+    $('#authForm').onsubmit = e => {
+      e.preventDefault();
+      const email = $('#authEmail').value.trim().toLowerCase();
+      const password = $('#authPassword').value;
+      const name = $('#authName').value.trim();
+      const saved = JSON.parse(localStorage.getItem('resumindAccount') || 'null');
+      if (authMode === 'forgot') {
+        const newPassword = $('#newPassword').value;
+        if (saved && saved.email === email) {
+          saved.password = newPassword;
+          localStorage.setItem('resumindAccount', JSON.stringify(saved));
+          $('#authMessage').textContent = 'Password reset. You can now sign in.';
+          setTimeout(() => { setAuthMode('signin'); $('#authEmail').value = email; }, 850);
+        } else {
+          $('#authMessage').textContent = 'No browser account was found for this email.';
+          $('#authMessage').style.color = 'var(--orange)';
+        }
+      } else if (authMode === 'signup') {
+        if (!name) { $('#authMessage').textContent = 'Please enter your name.'; return; }
+        localStorage.setItem('resumindAccount', JSON.stringify({ name, email, password }));
+        localStorage.setItem('resumindSession', JSON.stringify({ name, email }));
+        $('#authMessage').textContent = 'Account created successfully.';
+        setTimeout(() => { updateAccount(); showPage('overview'); }, 650);
+      } else if (saved && saved.email === email && saved.password === password) {
+        localStorage.setItem('resumindSession', JSON.stringify({ name: saved.name, email }));
+        $('#authMessage').textContent = 'Signed in successfully.';
+        setTimeout(() => { updateAccount(); showPage('overview'); }, 650);
+      } else {
+        $('#authMessage').textContent = 'Email or password does not match this browser account.';
+        $('#authMessage').style.color = 'var(--orange)';
+      }
+    };
+
+    function updateAccount() {
+      const session = JSON.parse(localStorage.getItem('resumindSession') || 'null');
+      if (session) {
+        const initials = session.name.split(/\s+/).map(x => x[0]).join('').slice(0,2).toUpperCase();
+        profileButton.textContent = initials;
+        $('#accountAction').textContent = session.name + ' · Account';
+        $('#logoutButton').style.display = 'block';
+      } else {
+        profileButton.textContent = '↗';
+        $('#accountAction').textContent = 'Sign in or create account';
+        $('#logoutButton').style.display = 'none';
+      }
+    }
+
+    $('#logoutButton').onclick = () => {
+      localStorage.removeItem('resumindSession');
+      updateAccount();
+      showPage('auth');
+    };
+
+    const input = $('#fileInput'), drop = $('#dropZone');
+    ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+    ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+    drop.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+    input.addEventListener('change', () => handleFile(input.files[0]));
+    function handleFile(file) {
+      if (!file) return;
+      $('#fileName').textContent = '✓ ' + file.name;
+      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+        const reader = new FileReader();
+        reader.onload = () => analyze(String(reader.result));
+        reader.readAsText(file);
+      } else {
+        modal.classList.add('open');
+        $('#resumeText').placeholder = `“${file.name}” selected. PDF text extraction needs a backend; paste its text here for instant analysis.`;
+      }
+    }
+  </script>
+</body>
+</html>
