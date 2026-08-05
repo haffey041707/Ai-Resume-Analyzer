@@ -144,6 +144,10 @@ To turn the demo into a production service, the next steps are:
 - Node.js and Express
 - Stripe Checkout and server-side Session verification
 
+## Responsive design
+
+The interface includes dedicated layouts for wide desktop, compact desktop, tablet, mobile, and extra-small screens. Cards, checkout steps, pricing plans, tables, forms, notifications, and analysis results reflow without overlapping. Mobile controls use touch-friendly sizing, modals remain scrollable on short screens, and wide keyword data receives a contained horizontal scroll area instead of overflowing the page.
+
 ## Project structure
 
 ```text
